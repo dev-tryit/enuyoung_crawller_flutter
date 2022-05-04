@@ -1,3 +1,4 @@
+import 'package:enuyoung_crawller_flutter/_local/local.dart';
 import 'package:enuyoung_crawller_flutter/service/CrawllerService.dart';
 import 'package:flutter/material.dart';
 
@@ -12,7 +13,7 @@ class TestPage extends StatelessWidget {
         body: Column(
           children: [
             ElevatedButton(onPressed: () {
-              service.login("imkim1893","imkim1893");
+              service.login(localData["id"],localData["pw"]);
             }, child: Text("에듀코 로그인")),
           ],
         ),

@@ -82,7 +82,7 @@ class CrawllerService extends ChangeNotifier {
   Future<void> login(String? id, String? pw) async {
     await p.startBrowser(headless: false, width: 1280, height: 1024);
 
-    const String idSelector = '#_mem_id"';
+    const String idSelector = '#_mem_id';
     const String pwSelector = '#_mem_pw';
     const String loginSelector = '[name="btn_search"]';
     const String loginPageUrl = "https://erp.educo.co.kr/";
@@ -104,6 +104,16 @@ class CrawllerService extends ChangeNotifier {
       //   break;
       // }
     }
+
+
+    //secuNumStr1의 부모 th.의 text를 보면, 앞자리인지 뒷자리인지 알 수 있음,secuNumStr1로 어떤 번호인지도 알 수 있음
+    //secuNumStr3도 같음.
+
+    //secuNum2 넣는곳.
+    //secuNum4
+    //document.querySelector('#secuNum2').setValue('12')
+    // document.querySelector('a.check').click()
+    //다이어로그 확인
 
     await p.stopBrowser();
   }
