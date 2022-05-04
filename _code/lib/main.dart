@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:enuyoung_crawller_flutter/page/TestPage.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:enuyoung_crawller_flutter/MySetting.dart';
@@ -91,7 +92,7 @@ class MyApp extends StatelessWidget {
         child = MyComponents.easyLoadingBuilder()(context, child);
         return child;
       },
-      home: LoadPage(),
+      home: TestPage(),
     );
   }
 }

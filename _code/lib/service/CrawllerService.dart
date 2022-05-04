@@ -14,6 +14,7 @@ class CrawllerService extends ChangeNotifier {
   final Duration timeout;
 
   BuildContext context;
+
   CrawllerService(this.context)
       : this.p = PuppeteerUtil(),
         this.delay = const Duration(milliseconds: 25),
@@ -22,12 +23,15 @@ class CrawllerService extends ChangeNotifier {
   static ChangeNotifierProvider get provider =>
       ChangeNotifierProvider<CrawllerService>(
           create: (context) => CrawllerService(context));
-  static Widget consumer({required ConsumerBuilderType<CrawllerService> builder}) => Consumer<CrawllerService>(builder: builder);
-  static CrawllerService read(BuildContext context) => context.read<CrawllerService>();
 
+  static Widget consumer(
+          {required ConsumerBuilderType<CrawllerService> builder}) =>
+      Consumer<CrawllerService>(builder: builder);
+
+  static CrawllerService read(BuildContext context) =>
+      context.read<CrawllerService>();
 
   void saveHumorPost() async {
-
     // await p.startBrowser(headless: false, width: 1280, height: 1024);
     //
     // await login(idController.text, pwController.text);
@@ -50,6 +54,7 @@ class CrawllerService extends ChangeNotifier {
     //
     // await p.stopBrowser();
   }
+
   Future<InstaUser?> getInstaUser() async {
     return await InstaUserRepository.me.getOne();
   }
@@ -62,6 +67,7 @@ class CrawllerService extends ChangeNotifier {
       MyComponents.snackBar(context, "저장 실패하였습니다.");
     }
   }
+
   void goPostListViewPage() async {
     PageUtil.go(context, PostListViewPage());
   }
@@ -73,9 +79,13 @@ class CrawllerService extends ChangeNotifier {
     await saveInfoAboutPost();
    */
 
-
   Future<void> login(String? id, String? pw) async {
-    const String loginPageUrl = "https://www.instagram.com/accounts/login/";
+    await p.startBrowser(headless: false, width: 1280, height: 1024);
+
+    const String idSelector = '#_mem_id"';
+    const String pwSelector = '#_mem_pw';
+    const String loginSelector = '[name="btn_search"]';
+    const String loginPageUrl = "https://erp.educo.co.kr/";
     for (int i = 0; i < 5; i++) {
       await p.goto(loginPageUrl);
       if (await _isLoginSuccess()) {
@@ -84,20 +94,22 @@ class CrawllerService extends ChangeNotifier {
       }
 
       LogUtil.debug("[$id] 로그인에 실패하였습니다.");
-      await p.type('input[name="username"]', id ?? "", delay: delay);
-      await p.type('input[name="password"]', pw ?? "", delay: delay);
-      await p.clickAndWaitForNavigation('[type="submit"]', timeout: timeout);
+      await p.type(idSelector, id ?? "", delay: delay);
+      await p.type(pwSelector, pw ?? "", delay: delay);
+      await p.clickAndWaitForNavigation(loginSelector, timeout: timeout);
 
-      if (await p.existTag('#slfErrorAlert')) {
-        LogUtil.debug(
-            "[$id] 로그인에 실패하였습니다. 원인 : ${await p.text(tag: await p.$('#slfErrorAlert'))}");
-        break;
-      }
+      // if (await p.existTag('#slfErrorAlert')) {
+      //   LogUtil.debug(
+      //       "[$id] 로그인에 실패하였습니다. 원인 : ${await p.text(tag: await p.$('#slfErrorAlert'))}");
+      //   break;
+      // }
     }
+
+    await p.stopBrowser();
   }
 
   Future<bool> _isLoginSuccess() async {
-    bool isLoginPage = await p.existTag('input[name="username"]');
+    bool isLoginPage = await p.existTag('[name="loginForm"]');
     return !isLoginPage;
   }
 
