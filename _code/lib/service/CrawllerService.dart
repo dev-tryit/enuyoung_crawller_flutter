@@ -7,6 +7,7 @@ import 'package:enuyoung_crawller_flutter/page/PostListViewPage.dart';
 import 'package:enuyoung_crawller_flutter/repository/InstaUserRepository.dart';
 import 'package:enuyoung_crawller_flutter/util/MyComponents.dart';
 import 'package:provider/provider.dart';
+import 'package:puppeteer/puppeteer.dart';
 
 class CrawllerService extends ChangeNotifier {
   final PuppeteerUtil p;
@@ -79,7 +80,12 @@ class CrawllerService extends ChangeNotifier {
     await saveInfoAboutPost();
    */
 
-  Future<void> login(String? id, String? pw) async {
+  Future<void> login(Map<String, dynamic> localData) async {
+    final String id = localData["id"];
+    final String pw = localData["pw"];
+    final List<List<int>> secureCardNumberList =
+        localData["secureCardNumberList"];
+
     await p.startBrowser(headless: false, width: 1280, height: 1024);
 
     const String idSelector = '#_mem_id';
@@ -94,28 +100,65 @@ class CrawllerService extends ChangeNotifier {
       }
 
       LogUtil.debug("[$id] 로그인에 실패하였습니다.");
-      await p.type(idSelector, id ?? "", delay: delay);
-      await p.type(pwSelector, pw ?? "", delay: delay);
-      await p.clickAndWaitForNavigation(loginSelector, timeout: timeout);
+      await p.type(idSelector, id, delay: delay);
+      await p.type(pwSelector, pw, delay: delay);
+      await p.click(loginSelector);
 
+      await p.wait(3000); //보안카드올떄까지 기다려야함.
+
+      await setCardNumber(secureCardNumberList, "#secuNumStr1", "#secuNum2");
+      await setCardNumber(secureCardNumberList, "#secuNumStr3", "#secuNum4");
+
+      await p.click('a.check');
+
+      //로그인 실패 체크
       // if (await p.existTag('#slfErrorAlert')) {
       //   LogUtil.debug(
       //       "[$id] 로그인에 실패하였습니다. 원인 : ${await p.text(tag: await p.$('#slfErrorAlert'))}");
       //   break;
       // }
+      break;
     }
 
 
-    //secuNumStr1의 부모 th.의 text를 보면, 앞자리인지 뒷자리인지 알 수 있음,secuNumStr1로 어떤 번호인지도 알 수 있음
-    //secuNumStr3도 같음.
+    //해당 페이지 이동 및 데이터 얻기.
 
-    //secuNum2 넣는곳.
-    //secuNum4
-    //document.querySelector('#secuNum2').setValue('12')
-    // document.querySelector('a.check').click()
-    //다이어로그 확인
+    // await p.stopBrowser();
+  }
 
-    await p.stopBrowser();
+  Future<void> setCardNumber(List<List<int>> secureCardNumberList, String soureceSelector, String targetSelector) async {
+    ElementHandle secuNumStr1 = await p.$(soureceSelector);
+    String secuNumStr1Text = await p.text(tag: secuNumStr1);
+    LogUtil.info('getCardNumber text : $secuNumStr1Text');
+    secuNumStr1Text = secuNumStr1Text.replaceAll("[", "").replaceAll("]", "");
+    LogUtil.info('getCardNumber text2 : $secuNumStr1Text');
+    int? cardIndexWith1Added = int.tryParse(secuNumStr1Text);
+    if (cardIndexWith1Added == null) {
+      LogUtil.error("getCardNumber cardIndexWith1Added가 null입니다. 종료시킴.");
+      return;
+    }
+    int cardIndex = cardIndexWith1Added - 1;
+
+    ElementHandle secuNumStr1Parent =
+        (await p.parent(secuNumStr1)) as ElementHandle;
+    List<String> tempSplitList =
+        (await p.text(tag: secuNumStr1Parent)).split(" "); // 앞 2자리
+    if (tempSplitList.length != 3) {
+      LogUtil.error(
+          "getCardNumber tempSplitList.length != 3입니다. 종료되야합니다. tempSplitList : $tempSplitList");
+      return;
+    }
+    String secuNumStr1ParentText = tempSplitList[1]; //앞
+    bool isFront = secuNumStr1ParentText == "앞";
+
+    int secureCardNumber = secureCardNumberList[cardIndex][isFront ? 0 : 1];
+    LogUtil.info("getCardNumber secureCardNumber : $secureCardNumber");
+
+    p.setDialogListener(onData: (dialog) async {
+      LogUtil.info("다이어로그 내용 : ${dialog.message}");
+      await dialog.dismiss();
+    });
+    p.type(targetSelector,"$secureCardNumber");
   }
 
   Future<bool> _isLoginSuccess() async {

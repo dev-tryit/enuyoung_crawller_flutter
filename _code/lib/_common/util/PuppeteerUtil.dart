@@ -112,6 +112,10 @@ class PuppeteerUtil {
     return await tab.reload();
   }
 
+  void setDialogListener({required void Function(Dialog event) onData}) {
+    tab.onDialog.listen(onData);
+  }
+
   Future<void> goto(String url) async {
     await tab.goto(url, wait: Until.networkIdle, timeout: defaultTimeout);
   }
@@ -143,6 +147,10 @@ class PuppeteerUtil {
     return await tab.evaluate(pageFunction, args: args);
   }
 
+  Future<JsHandle> evaluateHandle(String pageFunction, {List? args}) async {
+    return await tab.evaluateHandle(pageFunction, args: args);
+  }
+
   Future<void> type(String selector, String content, {Duration? delay}) async {
     await tab.type(selector, content, delay: delay);
   }
@@ -157,6 +165,10 @@ class PuppeteerUtil {
             setTimeout(resolve, $millseconds)
       });
   }''');
+  }
+
+  Future<JsHandle> parent(ElementHandle tag) async {
+    return await tag.property("parentNode");
   }
 
   Future<ElementHandle> $(String selector, {ElementHandle? tag}) async {

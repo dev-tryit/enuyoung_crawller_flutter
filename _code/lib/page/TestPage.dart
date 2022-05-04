@@ -13,8 +13,8 @@ class TestPage extends StatelessWidget {
         body: Column(
           children: [
             ElevatedButton(onPressed: () {
-              service.login(localData["id"],localData["pw"]);
-            }, child: Text("에듀코 로그인")),
+              service.login(localData);
+            }, child: Text("에듀코 자동으로 텍스트 얻기")),
           ],
         ),
       ),
